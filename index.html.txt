@@ -1,0 +1,515 @@
+2:11:48 부터 시작
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>로또 번호 추천기</title>
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0a0a12;
+      --surface: #13131f;
+      --gold: #f5c842;
+      --gold-light: #ffe87a;
+      --red: #ff4a4a;
+      --blue: #4a90ff;
+      --green: #4acf7a;
+      --gray: #aaaacc;
+      --white: #f0f0ff;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--white);
+      font-family: 'Noto Sans KR', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* 배경 별빛 */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 30%, rgba(245,200,66,0.07) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 70%, rgba(74,144,255,0.07) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .stars {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .star {
+      position: absolute;
+      border-radius: 50%;
+      background: #fff;
+      animation: twinkle var(--d) ease-in-out infinite alternate;
+      opacity: 0;
+    }
+    @keyframes twinkle {
+      from { opacity: 0; transform: scale(0.8); }
+      to   { opacity: var(--op); transform: scale(1.2); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .logo {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: clamp(2.4rem, 8vw, 3.6rem);
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-light), #ff9f43);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.3rem;
+      filter: drop-shadow(0 0 18px rgba(245,200,66,0.45));
+    }
+
+    .subtitle {
+      color: var(--gray);
+      font-size: 0.92rem;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 3rem;
+    }
+
+    /* 번호 카드 */
+    .balls-card {
+      background: var(--surface);
+      border: 1px solid rgba(245,200,66,0.15);
+      border-radius: 20px;
+      padding: 2.2rem 1.8rem 2rem;
+      margin-bottom: 1.8rem;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+      min-height: 140px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.2rem;
+    }
+
+    .round-label {
+      font-size: 0.78rem;
+      color: var(--gold);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+    .balls-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .ball {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 1.25rem;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4), inset 0 -3px 6px rgba(0,0,0,0.25), inset 0 3px 6px rgba(255,255,255,0.2);
+      position: relative;
+      transform: scale(0);
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+    }
+    .ball.show {
+      transform: scale(1);
+      opacity: 1;
+    }
+    .ball::after {
+      content: '';
+      position: absolute;
+      top: 10px; left: 12px;
+      width: 14px; height: 8px;
+      background: rgba(255,255,255,0.35);
+      border-radius: 50%;
+      transform: rotate(-30deg);
+    }
+
+    /* 번호 색상 */
+    .b-yellow { background: linear-gradient(145deg, #f7c948, #e0a820); }
+    .b-blue   { background: linear-gradient(145deg, #4a90ff, #2260c0); }
+    .b-red    { background: linear-gradient(145deg, #ff5252, #c41a1a); }
+    .b-gray   { background: linear-gradient(145deg, #888, #555); }
+    .b-green  { background: linear-gradient(145deg, #4acf7a, #1e9e50); }
+
+    .bonus-sep {
+      font-size: 0.8rem;
+      color: var(--gray);
+      opacity: 0.6;
+      letter-spacing: 1px;
+    }
+    .bonus-label {
+      font-size: 0.7rem;
+      color: var(--gold);
+      position: absolute;
+      bottom: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      letter-spacing: 1px;
+    }
+    .bonus-wrapper {
+      position: relative;
+      padding-bottom: 20px;
+    }
+
+    .placeholder {
+      color: rgba(170,170,204,0.3);
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+    }
+
+    /* 버튼 */
+    .btn-generate {
+      background: linear-gradient(135deg, var(--gold), #e09820);
+      border: none;
+      border-radius: 14px;
+      color: #1a1000;
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 1.15rem;
+      letter-spacing: 2px;
+      padding: 1rem 2.5rem;
+      cursor: pointer;
+      width: 100%;
+      max-width: 320px;
+      transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+      box-shadow: 0 4px 24px rgba(245,200,66,0.35);
+      position: relative;
+      overflow: hidden;
+    }
+    .btn-generate::before {
+      content: '';
+      position: absolute;
+      top: 0; left: -100%;
+      width: 60%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+      transition: left 0.5s;
+    }
+    .btn-generate:hover::before { left: 160%; }
+    .btn-generate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(245,200,66,0.5);
+      filter: brightness(1.08);
+    }
+    .btn-generate:active { transform: scale(0.97); }
+    .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* 추천 횟수 */
+    .count-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 1.4rem;
+    }
+    .count-label { color: var(--gray); font-size: 0.88rem; }
+    .count-btn {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      color: var(--white);
+      font-size: 1.1rem;
+      width: 32px; height: 32px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .count-btn:hover { background: rgba(245,200,66,0.15); }
+    .count-val {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 1.3rem;
+      color: var(--gold);
+      min-width: 24px;
+    }
+
+    /* 다중 세트 */
+    .sets-container {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 1.8rem;
+    }
+
+    .set-card {
+      background: var(--surface);
+      border: 1px solid rgba(245,200,66,0.12);
+      border-radius: 16px;
+      padding: 1.2rem 1.4rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .set-num {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 0.85rem;
+      color: var(--gold);
+      opacity: 0.7;
+      min-width: 30px;
+    }
+
+    .ball-sm {
+      width: 42px; height: 42px;
+      font-size: 1rem;
+    }
+
+    /* 히스토리 */
+    .history-section {
+      margin-top: 2rem;
+      text-align: left;
+    }
+    .history-title {
+      font-size: 0.8rem;
+      color: var(--gray);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+      padding-left: 4px;
+    }
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .history-item {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 10px;
+      padding: 0.7rem 1rem;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      animation: fadeIn 0.4s ease;
+    }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform: translateY(0); } }
+    .h-time { font-size: 0.72rem; color: var(--gray); opacity: 0.5; margin-right: 4px; }
+
+    .ball-xs {
+      width: 30px; height: 30px;
+      font-size: 0.75rem;
+    }
+    .ball-xs::after { display: none; }
+
+    .footer {
+      margin-top: 3rem;
+      color: rgba(170,170,204,0.3);
+      font-size: 0.75rem;
+      line-height: 1.7;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="stars" id="stars"></div>
+
+<div class="container">
+  <div class="logo">🍀 로또 추천기</div>
+  <div class="subtitle">Lucky Number Generator</div>
+
+  <!-- 세트 수 선택 -->
+  <div class="count-row">
+    <span class="count-label">추천 세트 수</span>
+    <button class="count-btn" id="btnMinus">−</button>
+    <span class="count-val" id="countVal">1</span>
+    <button class="count-btn" id="btnPlus">+</button>
+    <span class="count-label">세트</span>
+  </div>
+
+  <!-- 번호 표시 -->
+  <div id="mainDisplay">
+    <div class="balls-card" id="singleCard">
+      <div class="placeholder" id="placeholder">버튼을 눌러 행운의 번호를 뽑아보세요 ✨</div>
+      <div class="balls-row" id="ballsRow" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- 생성 버튼 -->
+  <button class="btn-generate" id="btnGen">🎰 번호 추천받기</button>
+
+  <!-- 히스토리 -->
+  <div class="history-section" id="historySection" style="display:none;">
+    <div class="history-title">📋 최근 추천 기록</div>
+    <div class="history-list" id="historyList"></div>
+  </div>
+
+  <div class="footer">
+    ※ 이 번호는 완전히 무작위로 생성됩니다.<br>
+    당첨을 보장하지 않으며, 오락 목적으로만 사용하세요.
+  </div>
+</div>
+
+<script>
+  // 별 생성
+  const starsEl = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `
+      width:${size}px; height:${size}px;
+      top:${Math.random()*100}%; left:${Math.random()*100}%;
+      --d:${(Math.random()*3+1.5).toFixed(1)}s;
+      --op:${(Math.random()*0.6+0.2).toFixed(2)};
+      animation-delay:${(Math.random()*4).toFixed(1)}s;
+    `;
+    starsEl.appendChild(s);
+  }
+
+  // 번호 색상
+  function getBallClass(n) {
+    if (n <= 10) return 'b-yellow';
+    if (n <= 20) return 'b-blue';
+    if (n <= 30) return 'b-red';
+    if (n <= 40) return 'b-gray';
+    return 'b-green';
+  }
+
+  // 랜덤 6+1 번호
+  function genNumbers() {
+    const pool = Array.from({length: 45}, (_, i) => i + 1);
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    const main = pool.slice(0, 6).sort((a, b) => a - b);
+    let bonus;
+    do { bonus = Math.floor(Math.random() * 45) + 1; } while (main.includes(bonus));
+    return { main, bonus };
+  }
+
+  // 볼 HTML
+  function makeBall(n, cls = '') {
+    return `<div class="ball ${getBallClass(n)} ${cls}">${n}</div>`;
+  }
+
+  // 세트 수
+  let setCount = 1;
+  const countVal = document.getElementById('countVal');
+  document.getElementById('btnMinus').onclick = () => { if (setCount > 1) { setCount--; countVal.textContent = setCount; } };
+  document.getElementById('btnPlus').onclick  = () => { if (setCount < 5) { setCount++; countVal.textContent = setCount; } };
+
+  // 히스토리
+  const history = [];
+
+  function addHistory(sets) {
+    const now = new Date();
+    const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    history.unshift({ sets, time });
+    if (history.length > 5) history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const sec = document.getElementById('historySection');
+    const list = document.getElementById('historyList');
+    if (history.length === 0) { sec.style.display = 'none'; return; }
+    sec.style.display = 'block';
+    list.innerHTML = history.map(h => `
+      <div class="history-item">
+        <span class="h-time">${h.time}</span>
+        ${h.sets.map(s =>
+          `<span style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
+            ${s.main.map(n => `<div class="ball ball-xs ${getBallClass(n)}">${n}</div>`).join('')}
+            <span style="color:rgba(170,170,204,0.4);font-size:0.7rem;">+</span>
+            <div class="ball ball-xs ${getBallClass(s.bonus)}">${s.bonus}</div>
+          </span>`
+        ).join('<span style="color:rgba(170,170,204,0.3);font-size:0.75rem;margin:0 4px;">|</span>')}
+      </div>
+    `).join('');
+  }
+
+  // 단일 세트 표시
+  function showSingle(set) {
+    document.getElementById('placeholder').style.display = 'none';
+    const row = document.getElementById('ballsRow');
+    row.style.display = 'flex';
+    row.innerHTML =
+      set.main.map(n => makeBall(n)).join('') +
+      `<span class="bonus-sep">+</span>` +
+      `<div class="bonus-wrapper">${makeBall(set.bonus)}<span class="bonus-label">보너스</span></div>`;
+    setTimeout(() => {
+      row.querySelectorAll('.ball').forEach((b, i) => {
+        setTimeout(() => b.classList.add('show'), i * 80);
+      });
+    }, 10);
+  }
+
+  // 다중 세트 표시
+  function showMulti(sets) {
+    const main = document.getElementById('mainDisplay');
+    main.innerHTML = `<div class="sets-container" id="setsContainer"></div>`;
+    const cont = document.getElementById('setsContainer');
+    sets.forEach((set, idx) => {
+      const card = document.createElement('div');
+      card.className = 'set-card';
+      card.innerHTML = `
+        <span class="set-num">${idx + 1}번</span>
+        ${set.main.map(n => `<div class="ball ball-sm ${getBallClass(n)}">${n}</div>`).join('')}
+        <span class="bonus-sep" style="font-size:0.75rem;">+</span>
+        <div class="ball ball-sm ${getBallClass(set.bonus)}">${set.bonus}</div>
+      `;
+      cont.appendChild(card);
+      setTimeout(() => {
+        card.querySelectorAll('.ball').forEach((b, i) => {
+          setTimeout(() => b.classList.add('show'), i * 60);
+        });
+      }, idx * 100 + 10);
+    });
+  }
+
+  // 버튼
+  document.getElementById('btnGen').onclick = function () {
+    this.disabled = true;
+    const sets = Array.from({length: setCount}, genNumbers);
+
+    if (setCount === 1) {
+      // 단일 카드 복원
+      document.getElementById('mainDisplay').innerHTML = `
+        <div class="balls-card" id="singleCard">
+          <div class="placeholder" id="placeholder" style="display:none;"></div>
+          <div class="balls-row" id="ballsRow" style="display:flex;"></div>
+        </div>`;
+      showSingle(sets[0]);
+    } else {
+      showMulti(sets);
+    }
+
+    addHistory(sets);
+    setTimeout(() => { this.disabled = false; }, 800);
+  };
+</script>
+</body>
+</html>

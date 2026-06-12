@@ -1,515 +1,1154 @@
-2:11:48 부터 시작
-
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>로또 번호 추천기</title>
-  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@300;400;700&display=swap" rel="stylesheet" />
+  <title>로또 추천기</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg: #0a0a12;
-      --surface: #13131f;
-      --gold: #f5c842;
-      --gold-light: #ffe87a;
-      --red: #ff4a4a;
+      --bg: #05070d;
+      --bg-left: rgba(245, 190, 55, 0.08);
+      --bg-right: rgba(70, 130, 255, 0.1);
+      --panel: rgba(20, 23, 38, 0.92);
+      --panel-soft: rgba(25, 28, 43, 0.86);
+      --panel-strong: #1d2030;
+      --line: rgba(178, 188, 220, 0.18);
+      --line-strong: rgba(246, 199, 72, 0.26);
+      --text: #edf1ff;
+      --muted: #9aa4bf;
+      --muted-soft: #6f7894;
+      --gold: #ffd348;
+      --gold-deep: #f2a91e;
       --blue: #4a90ff;
-      --green: #4acf7a;
-      --gray: #aaaacc;
-      --white: #f0f0ff;
+      --green: #4bd17d;
+      --red: #ff5b5b;
+      --gray: #8d94a7;
+      --shadow: rgba(0, 0, 0, 0.55);
+      --input: rgba(255, 255, 255, 0.06);
+      --button-text: #211300;
+      --radius: 8px;
     }
 
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body.light {
+      --bg: #f5f7fb;
+      --bg-left: rgba(255, 209, 70, 0.22);
+      --bg-right: rgba(72, 144, 255, 0.16);
+      --panel: rgba(255, 255, 255, 0.92);
+      --panel-soft: rgba(248, 250, 255, 0.96);
+      --panel-strong: #ffffff;
+      --line: rgba(70, 82, 112, 0.14);
+      --line-strong: rgba(242, 169, 30, 0.34);
+      --text: #161a27;
+      --muted: #5f6b82;
+      --muted-soft: #8791a6;
+      --shadow: rgba(32, 41, 68, 0.16);
+      --input: rgba(20, 29, 50, 0.06);
+      --button-text: #241500;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
-      background: var(--bg);
-      color: var(--white);
-      font-family: 'Noto Sans KR', sans-serif;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow-x: hidden;
-      position: relative;
-    }
-
-    /* 배경 별빛 */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
+      color: var(--text);
+      font-family: "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background:
-        radial-gradient(ellipse at 20% 30%, rgba(245,200,66,0.07) 0%, transparent 50%),
-        radial-gradient(ellipse at 80% 70%, rgba(74,144,255,0.07) 0%, transparent 50%);
-      pointer-events: none;
+        radial-gradient(circle at 22% 28%, var(--bg-left), transparent 34%),
+        radial-gradient(circle at 82% 68%, var(--bg-right), transparent 36%),
+        linear-gradient(115deg, rgba(255, 205, 74, 0.05), transparent 28%),
+        var(--bg);
+      overflow-x: hidden;
+      transition: background 0.2s ease, color 0.2s ease;
     }
 
-    .stars {
+    body::before,
+    body::after {
+      content: "";
       position: fixed;
       inset: 0;
       pointer-events: none;
-      overflow: hidden;
+      z-index: 0;
     }
-    .star {
-      position: absolute;
-      border-radius: 50%;
-      background: #fff;
-      animation: twinkle var(--d) ease-in-out infinite alternate;
+
+    body::before {
+      background-image:
+        radial-gradient(circle, rgba(255, 255, 255, 0.32) 0 1px, transparent 1.4px),
+        radial-gradient(circle, rgba(255, 214, 91, 0.3) 0 1px, transparent 1.5px);
+      background-size: 238px 196px, 365px 252px;
+      background-position: 34px 18px, 128px 104px;
+      opacity: 0.55;
+    }
+
+    body::after {
+      background: linear-gradient(90deg, rgba(0, 0, 0, 0.42), transparent 38%, rgba(0, 15, 40, 0.22));
+      mix-blend-mode: multiply;
+    }
+
+    body.light::after {
       opacity: 0;
     }
-    @keyframes twinkle {
-      from { opacity: 0; transform: scale(0.8); }
-      to   { opacity: var(--op); transform: scale(1.2); }
+
+    button,
+    input {
+      font: inherit;
     }
 
-    .container {
+    button {
+      color: inherit;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 24px;
+      z-index: 20;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 34px;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(22, 26, 42, 0.74);
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 24px var(--shadow);
+      backdrop-filter: blur(14px);
+      transition: transform 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+    }
+
+    body.light .theme-toggle {
+      background: rgba(255, 255, 255, 0.78);
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--line-strong);
+      transform: translateY(-1px);
+    }
+
+    .page {
       position: relative;
-      z-index: 10;
+      z-index: 1;
+      width: min(100%, 590px);
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 19vh 18px 8vh;
       text-align: center;
-      padding: 2rem 1.5rem;
-      width: 100%;
-      max-width: 560px;
     }
 
-    .logo {
-      font-family: 'Black Han Sans', sans-serif;
-      font-size: clamp(2.4rem, 8vw, 3.6rem);
-      letter-spacing: 2px;
-      background: linear-gradient(135deg, var(--gold), var(--gold-light), #ff9f43);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 0.3rem;
-      filter: drop-shadow(0 0 18px rgba(245,200,66,0.45));
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 5px;
+      filter: drop-shadow(0 0 22px rgba(255, 211, 72, 0.4));
+    }
+
+    .flower {
+      position: relative;
+      width: 45px;
+      height: 45px;
+      flex: 0 0 45px;
+    }
+
+    .flower span,
+    .flower::before {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #ffe36f, #ffbf22);
+      box-shadow: 0 0 18px rgba(255, 211, 72, 0.54);
+      content: "";
+    }
+
+    .flower .p1 { left: 11px; top: 0; }
+    .flower .p2 { right: 0; top: 11px; }
+    .flower .p3 { left: 11px; bottom: 0; }
+    .flower .p4 { left: 0; top: 11px; }
+    .flower::before {
+      left: 14px;
+      top: 14px;
+      width: 17px;
+      height: 17px;
+      background: #fff179;
+      z-index: 2;
+    }
+
+    h1 {
+      font-family: "Noto Sans KR", system-ui, sans-serif;
+      font-size: clamp(2.35rem, 7vw, 3.35rem);
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: 1px;
+      color: var(--gold);
+      text-shadow: 0 0 14px rgba(255, 211, 72, 0.28);
     }
 
     .subtitle {
-      color: var(--gray);
-      font-size: 0.92rem;
-      letter-spacing: 3px;
+      margin-bottom: 30px;
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 6px;
       text-transform: uppercase;
-      margin-bottom: 3rem;
     }
 
-    /* 번호 카드 */
-    .balls-card {
-      background: var(--surface);
-      border: 1px solid rgba(245,200,66,0.15);
-      border-radius: 20px;
-      padding: 2.2rem 1.8rem 2rem;
-      margin-bottom: 1.8rem;
-      box-shadow: 0 8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-      min-height: 140px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 1.2rem;
-    }
-
-    .round-label {
-      font-size: 0.78rem;
-      color: var(--gold);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      opacity: 0.8;
-    }
-
-    .balls-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .ball {
-      width: 54px;
-      height: 54px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'Black Han Sans', sans-serif;
-      font-size: 1.25rem;
-      color: #fff;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.4), inset 0 -3px 6px rgba(0,0,0,0.25), inset 0 3px 6px rgba(255,255,255,0.2);
-      position: relative;
-      transform: scale(0);
-      opacity: 0;
-      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
-    }
-    .ball.show {
-      transform: scale(1);
-      opacity: 1;
-    }
-    .ball::after {
-      content: '';
-      position: absolute;
-      top: 10px; left: 12px;
-      width: 14px; height: 8px;
-      background: rgba(255,255,255,0.35);
-      border-radius: 50%;
-      transform: rotate(-30deg);
-    }
-
-    /* 번호 색상 */
-    .b-yellow { background: linear-gradient(145deg, #f7c948, #e0a820); }
-    .b-blue   { background: linear-gradient(145deg, #4a90ff, #2260c0); }
-    .b-red    { background: linear-gradient(145deg, #ff5252, #c41a1a); }
-    .b-gray   { background: linear-gradient(145deg, #888, #555); }
-    .b-green  { background: linear-gradient(145deg, #4acf7a, #1e9e50); }
-
-    .bonus-sep {
-      font-size: 0.8rem;
-      color: var(--gray);
-      opacity: 0.6;
-      letter-spacing: 1px;
-    }
-    .bonus-label {
-      font-size: 0.7rem;
-      color: var(--gold);
-      position: absolute;
-      bottom: -18px;
-      left: 50%;
-      transform: translateX(-50%);
-      white-space: nowrap;
-      letter-spacing: 1px;
-    }
-    .bonus-wrapper {
-      position: relative;
-      padding-bottom: 20px;
-    }
-
-    .placeholder {
-      color: rgba(170,170,204,0.3);
-      font-size: 0.95rem;
-      letter-spacing: 1px;
-    }
-
-    /* 버튼 */
-    .btn-generate {
-      background: linear-gradient(135deg, var(--gold), #e09820);
-      border: none;
-      border-radius: 14px;
-      color: #1a1000;
-      font-family: 'Black Han Sans', sans-serif;
-      font-size: 1.15rem;
-      letter-spacing: 2px;
-      padding: 1rem 2.5rem;
-      cursor: pointer;
-      width: 100%;
-      max-width: 320px;
-      transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
-      box-shadow: 0 4px 24px rgba(245,200,66,0.35);
-      position: relative;
-      overflow: hidden;
-    }
-    .btn-generate::before {
-      content: '';
-      position: absolute;
-      top: 0; left: -100%;
-      width: 60%; height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
-      transition: left 0.5s;
-    }
-    .btn-generate:hover::before { left: 160%; }
-    .btn-generate:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 32px rgba(245,200,66,0.5);
-      filter: brightness(1.08);
-    }
-    .btn-generate:active { transform: scale(0.97); }
-    .btn-generate:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    /* 추천 횟수 */
     .count-row {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      margin-bottom: 1.4rem;
-    }
-    .count-label { color: var(--gray); font-size: 0.88rem; }
-    .count-btn {
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 8px;
-      color: var(--white);
-      font-size: 1.1rem;
-      width: 32px; height: 32px;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: background 0.15s;
-    }
-    .count-btn:hover { background: rgba(245,200,66,0.15); }
-    .count-val {
-      font-family: 'Black Han Sans', sans-serif;
-      font-size: 1.3rem;
-      color: var(--gold);
-      min-width: 24px;
+      gap: 10px;
+      margin-bottom: 16px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 800;
     }
 
-    /* 다중 세트 */
-    .sets-container {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      margin-bottom: 1.8rem;
-    }
-
-    .set-card {
-      background: var(--surface);
-      border: 1px solid rgba(245,200,66,0.12);
-      border-radius: 16px;
-      padding: 1.2rem 1.4rem 1rem;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      justify-content: center;
-    }
-    .set-num {
-      font-family: 'Black Han Sans', sans-serif;
-      font-size: 0.85rem;
-      color: var(--gold);
-      opacity: 0.7;
-      min-width: 30px;
-    }
-
-    .ball-sm {
-      width: 42px; height: 42px;
+    .stepper {
+      width: 30px;
+      height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--panel-strong);
+      color: var(--text);
       font-size: 1rem;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
     }
 
-    /* 히스토리 */
-    .history-section {
-      margin-top: 2rem;
+    .stepper:hover {
+      border-color: var(--line-strong);
+      transform: translateY(-1px);
+    }
+
+    .count-value {
+      min-width: 18px;
+      color: var(--gold);
+      font-weight: 900;
+    }
+
+    .panel {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--panel);
+      box-shadow: 0 18px 38px var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(12px);
+    }
+
+    .number-filter {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
       text-align: left;
     }
-    .history-title {
-      font-size: 0.8rem;
-      color: var(--gray);
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      margin-bottom: 0.8rem;
-      padding-left: 4px;
+
+    label {
+      display: block;
+      color: var(--text);
+      font-size: 0.78rem;
+      font-weight: 800;
     }
-    .history-list {
+
+    .field label {
+      margin-bottom: 8px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      min-height: 38px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      outline: none;
+      background: var(--input);
+      color: var(--text);
+      font-size: 0.84rem;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    input[type="text"]::placeholder {
+      color: var(--muted-soft);
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--line-strong);
+      box-shadow: 0 0 0 3px rgba(255, 211, 72, 0.11);
+    }
+
+    .options {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+
+    .check-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 32px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .check-pill input {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--gold);
+      cursor: pointer;
+    }
+
+    .lucky {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 62px;
+      padding: 0 16px;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .section-label {
+      color: var(--text);
+      font-size: 0.9rem;
+      font-weight: 900;
+    }
+
+    .result-board {
+      min-height: 62px;
+      margin-bottom: 16px;
+      padding: 10px 14px;
+    }
+
+    .result-empty {
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--muted-soft);
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .set-row {
+      display: grid;
+      grid-template-columns: 46px 1fr;
+      align-items: center;
+      gap: 10px;
+      min-height: 42px;
+      padding: 6px 2px;
+    }
+
+    .set-row + .set-row {
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    body.light .set-row + .set-row {
+      border-top-color: rgba(20, 29, 50, 0.08);
+    }
+
+    .set-index {
+      color: var(--gold);
+      font-weight: 900;
+      text-align: left;
+    }
+
+    .balls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .ball {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      color: #fff;
+      font-size: 0.82rem;
+      font-weight: 900;
+      box-shadow:
+        inset 0 2px 5px rgba(255, 255, 255, 0.26),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.2),
+        0 5px 15px rgba(0, 0, 0, 0.22);
+      transform: scale(0.72);
+      opacity: 0;
+      transition: transform 0.36s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.22s ease;
+    }
+
+    .ball.show {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    .ball.lucky-ball {
+      width: 36px;
+      height: 36px;
+      box-shadow:
+        inset 0 2px 5px rgba(255, 255, 255, 0.34),
+        inset 0 -4px 8px rgba(0, 0, 0, 0.18),
+        0 0 18px rgba(255, 255, 255, 0.16);
+      opacity: 1;
+      transform: none;
+    }
+
+    .yellow { background: linear-gradient(145deg, #ffd84d, #e3a81a); }
+    .blue { background: linear-gradient(145deg, #65a5ff, #2368d8); }
+    .red { background: linear-gradient(145deg, #ff6565, #c92a2a); }
+    .gray { background: linear-gradient(145deg, #a6adbd, #686f80); }
+    .green { background: linear-gradient(145deg, #57d889, #1d9a54); }
+
+    .primary-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: min(100%, 320px);
+      min-height: 50px;
+      margin: -1px 0 16px;
+      border: 0;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #ffd24e, #f2a91e);
+      color: var(--button-text);
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 14px 30px rgba(242, 169, 30, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.32);
+      transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .primary-action:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.05);
+      box-shadow: 0 18px 38px rgba(242, 169, 30, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+    }
+
+    .primary-action:active {
+      transform: translateY(0) scale(0.98);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+
+    .stat {
+      min-height: 60px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-    }
-    .history-item {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 10px;
-      padding: 0.7rem 1rem;
-      display: flex;
-      gap: 8px;
       align-items: center;
-      flex-wrap: wrap;
-      animation: fadeIn 0.4s ease;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-soft);
     }
-    @keyframes fadeIn { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform: translateY(0); } }
-    .h-time { font-size: 0.72rem; color: var(--gray); opacity: 0.5; margin-right: 4px; }
 
-    .ball-xs {
-      width: 30px; height: 30px;
-      font-size: 0.75rem;
+    .stat-title {
+      margin-bottom: 2px;
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 800;
     }
-    .ball-xs::after { display: none; }
+
+    .stat-value {
+      color: var(--gold);
+      font-size: 1rem;
+      font-weight: 900;
+    }
+
+    .history {
+      padding: 16px;
+      text-align: left;
+    }
+
+    .history-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .history-actions {
+      display: flex;
+      gap: 7px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .mini-button {
+      min-height: 32px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+      font-size: 0.82rem;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    body.light .mini-button {
+      background: rgba(20, 29, 50, 0.05);
+    }
+
+    .mini-button:hover {
+      border-color: var(--line-strong);
+      transform: translateY(-1px);
+    }
+
+    .history-list {
+      display: grid;
+      gap: 7px;
+    }
+
+    .history-item {
+      display: grid;
+      grid-template-columns: 52px 1fr;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.45;
+    }
+
+    .history-time {
+      color: var(--muted-soft);
+      font-weight: 700;
+    }
+
+    .history-empty {
+      color: var(--muted-soft);
+      font-size: 0.82rem;
+    }
 
     .footer {
-      margin-top: 3rem;
-      color: rgba(170,170,204,0.3);
-      font-size: 0.75rem;
+      margin-top: 44px;
+      color: var(--muted-soft);
+      font-size: 0.78rem;
       line-height: 1.7;
-      text-align: center;
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 28px;
+      z-index: 40;
+      max-width: min(92vw, 420px);
+      padding: 12px 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel-strong);
+      color: var(--text);
+      font-size: 0.86rem;
+      font-weight: 800;
+      box-shadow: 0 16px 34px var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 12px);
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 620px) {
+      .theme-toggle {
+        top: 12px;
+        right: 12px;
+      }
+
+      .page {
+        padding-top: 92px;
+      }
+
+      .brand {
+        gap: 10px;
+      }
+
+      .flower {
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+      }
+
+      .flower span,
+      .flower::before {
+        width: 18px;
+        height: 18px;
+      }
+
+      .flower .p1 { left: 9px; }
+      .flower .p2 { top: 9px; }
+      .flower .p3 { left: 9px; }
+      .flower .p4 { top: 9px; }
+      .flower::before {
+        left: 11px;
+        top: 11px;
+        width: 14px;
+        height: 14px;
+      }
+
+      .subtitle {
+        letter-spacing: 4px;
+      }
+
+      .number-filter {
+        grid-template-columns: 1fr;
+      }
+
+      .options {
+        flex-wrap: wrap;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .set-row {
+        grid-template-columns: 40px 1fr;
+      }
+
+      .balls {
+        justify-content: flex-start;
+      }
+
+      .history-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
     }
   </style>
 </head>
 <body>
+  <button class="theme-toggle" id="themeToggle" type="button">☀ 화이트 모드</button>
 
-<div class="stars" id="stars"></div>
-
-<div class="container">
-  <div class="logo">🍀 로또 추천기</div>
-  <div class="subtitle">Lucky Number Generator</div>
-
-  <!-- 세트 수 선택 -->
-  <div class="count-row">
-    <span class="count-label">추천 세트 수</span>
-    <button class="count-btn" id="btnMinus">−</button>
-    <span class="count-val" id="countVal">1</span>
-    <button class="count-btn" id="btnPlus">+</button>
-    <span class="count-label">세트</span>
-  </div>
-
-  <!-- 번호 표시 -->
-  <div id="mainDisplay">
-    <div class="balls-card" id="singleCard">
-      <div class="placeholder" id="placeholder">버튼을 눌러 행운의 번호를 뽑아보세요 ✨</div>
-      <div class="balls-row" id="ballsRow" style="display:none;"></div>
-    </div>
-  </div>
-
-  <!-- 생성 버튼 -->
-  <button class="btn-generate" id="btnGen">🎰 번호 추천받기</button>
-
-  <!-- 히스토리 -->
-  <div class="history-section" id="historySection" style="display:none;">
-    <div class="history-title">📋 최근 추천 기록</div>
-    <div class="history-list" id="historyList"></div>
-  </div>
-
-  <div class="footer">
-    ※ 이 번호는 완전히 무작위로 생성됩니다.<br>
-    당첨을 보장하지 않으며, 오락 목적으로만 사용하세요.
-  </div>
-</div>
-
-<script>
-  // 별 생성
-  const starsEl = document.getElementById('stars');
-  for (let i = 0; i < 80; i++) {
-    const s = document.createElement('div');
-    s.className = 'star';
-    const size = Math.random() * 2.5 + 0.5;
-    s.style.cssText = `
-      width:${size}px; height:${size}px;
-      top:${Math.random()*100}%; left:${Math.random()*100}%;
-      --d:${(Math.random()*3+1.5).toFixed(1)}s;
-      --op:${(Math.random()*0.6+0.2).toFixed(2)};
-      animation-delay:${(Math.random()*4).toFixed(1)}s;
-    `;
-    starsEl.appendChild(s);
-  }
-
-  // 번호 색상
-  function getBallClass(n) {
-    if (n <= 10) return 'b-yellow';
-    if (n <= 20) return 'b-blue';
-    if (n <= 30) return 'b-red';
-    if (n <= 40) return 'b-gray';
-    return 'b-green';
-  }
-
-  // 랜덤 6+1 번호
-  function genNumbers() {
-    const pool = Array.from({length: 45}, (_, i) => i + 1);
-    for (let i = pool.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
-    }
-    const main = pool.slice(0, 6).sort((a, b) => a - b);
-    let bonus;
-    do { bonus = Math.floor(Math.random() * 45) + 1; } while (main.includes(bonus));
-    return { main, bonus };
-  }
-
-  // 볼 HTML
-  function makeBall(n, cls = '') {
-    return `<div class="ball ${getBallClass(n)} ${cls}">${n}</div>`;
-  }
-
-  // 세트 수
-  let setCount = 1;
-  const countVal = document.getElementById('countVal');
-  document.getElementById('btnMinus').onclick = () => { if (setCount > 1) { setCount--; countVal.textContent = setCount; } };
-  document.getElementById('btnPlus').onclick  = () => { if (setCount < 5) { setCount++; countVal.textContent = setCount; } };
-
-  // 히스토리
-  const history = [];
-
-  function addHistory(sets) {
-    const now = new Date();
-    const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-    history.unshift({ sets, time });
-    if (history.length > 5) history.pop();
-    renderHistory();
-  }
-
-  function renderHistory() {
-    const sec = document.getElementById('historySection');
-    const list = document.getElementById('historyList');
-    if (history.length === 0) { sec.style.display = 'none'; return; }
-    sec.style.display = 'block';
-    list.innerHTML = history.map(h => `
-      <div class="history-item">
-        <span class="h-time">${h.time}</span>
-        ${h.sets.map(s =>
-          `<span style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;">
-            ${s.main.map(n => `<div class="ball ball-xs ${getBallClass(n)}">${n}</div>`).join('')}
-            <span style="color:rgba(170,170,204,0.4);font-size:0.7rem;">+</span>
-            <div class="ball ball-xs ${getBallClass(s.bonus)}">${s.bonus}</div>
-          </span>`
-        ).join('<span style="color:rgba(170,170,204,0.3);font-size:0.75rem;margin:0 4px;">|</span>')}
+  <main class="page">
+    <header>
+      <div class="brand" aria-label="로또 추천기">
+        <div class="flower" aria-hidden="true">
+          <span class="p1"></span>
+          <span class="p2"></span>
+          <span class="p3"></span>
+          <span class="p4"></span>
+        </div>
+        <h1>로또 추천기</h1>
       </div>
-    `).join('');
-  }
+      <p class="subtitle">Lucky Number Generator</p>
+    </header>
 
-  // 단일 세트 표시
-  function showSingle(set) {
-    document.getElementById('placeholder').style.display = 'none';
-    const row = document.getElementById('ballsRow');
-    row.style.display = 'flex';
-    row.innerHTML =
-      set.main.map(n => makeBall(n)).join('') +
-      `<span class="bonus-sep">+</span>` +
-      `<div class="bonus-wrapper">${makeBall(set.bonus)}<span class="bonus-label">보너스</span></div>`;
-    setTimeout(() => {
-      row.querySelectorAll('.ball').forEach((b, i) => {
-        setTimeout(() => b.classList.add('show'), i * 80);
-      });
-    }, 10);
-  }
+    <section class="count-row" aria-label="추천 세트 수">
+      <span>추천 세트 수</span>
+      <button class="stepper" id="btnMinus" type="button" aria-label="추천 세트 수 줄이기">−</button>
+      <strong class="count-value" id="countVal">1</strong>
+      <button class="stepper" id="btnPlus" type="button" aria-label="추천 세트 수 늘리기">+</button>
+      <span>세트</span>
+    </section>
 
-  // 다중 세트 표시
-  function showMulti(sets) {
-    const main = document.getElementById('mainDisplay');
-    main.innerHTML = `<div class="sets-container" id="setsContainer"></div>`;
-    const cont = document.getElementById('setsContainer');
-    sets.forEach((set, idx) => {
-      const card = document.createElement('div');
-      card.className = 'set-card';
-      card.innerHTML = `
-        <span class="set-num">${idx + 1}번</span>
-        ${set.main.map(n => `<div class="ball ball-sm ${getBallClass(n)}">${n}</div>`).join('')}
-        <span class="bonus-sep" style="font-size:0.75rem;">+</span>
-        <div class="ball ball-sm ${getBallClass(set.bonus)}">${set.bonus}</div>
-      `;
-      cont.appendChild(card);
-      setTimeout(() => {
-        card.querySelectorAll('.ball').forEach((b, i) => {
-          setTimeout(() => b.classList.add('show'), i * 60);
-        });
-      }, idx * 100 + 10);
-    });
-  }
+    <section class="panel number-filter" aria-label="번호 조건">
+      <div class="field">
+        <label for="includeInput">포함 번호</label>
+        <input id="includeInput" type="text" inputmode="numeric" placeholder="예: 7, 11" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="excludeInput">제외 번호</label>
+        <input id="excludeInput" type="text" inputmode="numeric" placeholder="예: 4, 13, 44" autocomplete="off" />
+      </div>
+    </section>
 
-  // 버튼
-  document.getElementById('btnGen').onclick = function () {
-    this.disabled = true;
-    const sets = Array.from({length: setCount}, genNumbers);
+    <section class="panel options" aria-label="추천 옵션">
+      <label class="check-pill">
+        <input id="evenBalance" type="checkbox" />
+        <span>홀짝 균형</span>
+      </label>
+      <label class="check-pill">
+        <input id="highBalance" type="checkbox" />
+        <span>고저 균형</span>
+      </label>
+    </section>
 
-    if (setCount === 1) {
-      // 단일 카드 복원
-      document.getElementById('mainDisplay').innerHTML = `
-        <div class="balls-card" id="singleCard">
-          <div class="placeholder" id="placeholder" style="display:none;"></div>
-          <div class="balls-row" id="ballsRow" style="display:flex;"></div>
-        </div>`;
-      showSingle(sets[0]);
-    } else {
-      showMulti(sets);
+    <section class="panel lucky" aria-label="오늘의 행운 번호">
+      <span class="section-label">오늘의 행운 번호</span>
+      <span class="ball lucky-ball" id="luckyNumber">40</span>
+    </section>
+
+    <section class="panel result-board" aria-label="추천 결과">
+      <div class="result-empty" id="emptyResult">번호 추천받기를 눌러 행운의 번호를 뽑아보세요</div>
+      <div id="resultList"></div>
+    </section>
+
+    <button class="primary-action" id="btnGen" type="button">번호 추천받기</button>
+
+    <section class="panel stats" aria-label="추천 통계">
+      <div class="stat">
+        <span class="stat-title">합계 평균</span>
+        <strong class="stat-value" id="sumAvg">-</strong>
+      </div>
+      <div class="stat">
+        <span class="stat-title">홀짝</span>
+        <strong class="stat-value" id="oddEven">-</strong>
+      </div>
+      <div class="stat">
+        <span class="stat-title">고저</span>
+        <strong class="stat-value" id="lowHigh">-</strong>
+      </div>
+      <div class="stat">
+        <span class="stat-title">기록</span>
+        <strong class="stat-value" id="historyCount">0</strong>
+      </div>
+    </section>
+
+    <section class="panel history" aria-label="최근 추천 기록">
+      <div class="history-head">
+        <h2 class="section-label">최근 추천 기록</h2>
+        <div class="history-actions">
+          <button class="mini-button" id="copyHistory" type="button">복사</button>
+          <button class="mini-button" id="downloadCsv" type="button">CSV</button>
+          <button class="mini-button" id="clearHistory" type="button">삭제</button>
+        </div>
+      </div>
+      <div class="history-list" id="historyList">
+        <p class="history-empty">아직 추천 기록이 없습니다.</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      이 번호는 완전한 무작위로 생성됩니다.<br />
+      당첨을 보장하지 않으며, 오락 목적으로만 사용하세요.
+    </footer>
+  </main>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const STORAGE_KEY = "lotto_recommender_history";
+    const THEME_KEY = "lotto_recommender_theme";
+    const MAX_HISTORY = 8;
+    const MAX_SET_COUNT = 5;
+    const MIN_SET_COUNT = 1;
+
+    const $ = (selector) => document.querySelector(selector);
+    const resultList = $("#resultList");
+    const emptyResult = $("#emptyResult");
+    const historyList = $("#historyList");
+    const includeInput = $("#includeInput");
+    const excludeInput = $("#excludeInput");
+    const evenBalance = $("#evenBalance");
+    const highBalance = $("#highBalance");
+    const countVal = $("#countVal");
+    const themeToggle = $("#themeToggle");
+    const toast = $("#toast");
+
+    let setCount = 1;
+    let latestSets = [];
+    let history = loadHistory();
+    let toastTimer;
+    let audioCtx;
+
+    function getBallClass(number) {
+      if (number <= 10) return "yellow";
+      if (number <= 20) return "blue";
+      if (number <= 30) return "red";
+      if (number <= 40) return "gray";
+      return "green";
     }
 
-    addHistory(sets);
-    setTimeout(() => { this.disabled = false; }, 800);
-  };
-</script>
+    function makeBall(number, delay = 0) {
+      return `<span class="ball ${getBallClass(number)}" style="transition-delay:${delay}ms">${number}</span>`;
+    }
+
+    function parseNumbers(value) {
+      const seen = new Set();
+      const numbers = value
+        .split(/[^0-9]+/)
+        .filter(Boolean)
+        .map(Number)
+        .filter((number) => {
+          if (number < 1 || number > 45 || seen.has(number)) return false;
+          seen.add(number);
+          return true;
+        });
+      return numbers;
+    }
+
+    function validateRules(includeNumbers, excludeNumbers) {
+      const includeSet = new Set(includeNumbers);
+      const conflict = excludeNumbers.find((number) => includeSet.has(number));
+      if (conflict) return `포함 번호와 제외 번호에 ${conflict}번이 같이 들어가 있어요.`;
+      if (includeNumbers.length > 6) return "포함 번호는 최대 6개까지 입력할 수 있어요.";
+      if (45 - excludeNumbers.length < 6) return "제외 번호가 너무 많아서 6개를 만들 수 없어요.";
+      if (getCompletionPlans(includeNumbers, excludeNumbers).plans.length === 0) {
+        if (evenBalance.checked && highBalance.checked) return "입력한 조건으로는 홀짝/고저 균형을 동시에 맞출 수 없어요.";
+        if (evenBalance.checked) return "입력한 조건으로는 홀짝 3:3을 만들 수 없어요.";
+        if (highBalance.checked) return "입력한 조건으로는 고저 3:3을 만들 수 없어요.";
+        return "입력한 조건으로는 6개 번호를 만들 수 없어요.";
+      }
+      return "";
+    }
+
+    function countOdd(numbers) {
+      return numbers.filter((number) => number % 2 === 1).length;
+    }
+
+    function countLow(numbers) {
+      return numbers.filter((number) => number <= 22).length;
+    }
+
+    function passesBalance(numbers) {
+      if (evenBalance.checked && countOdd(numbers) !== 3) return false;
+      if (highBalance.checked && countLow(numbers) !== 3) return false;
+      return true;
+    }
+
+    function getNumberBucket(number) {
+      if (number <= 22) return number % 2 === 1 ? "lowOdd" : "lowEven";
+      return number % 2 === 1 ? "highOdd" : "highEven";
+    }
+
+    function countBuckets(numbers) {
+      const buckets = { lowOdd: 0, lowEven: 0, highOdd: 0, highEven: 0 };
+      numbers.forEach((number) => {
+        buckets[getNumberBucket(number)]++;
+      });
+      return buckets;
+    }
+
+    function makeCategoryPools(includeNumbers, excludeNumbers) {
+      const blocked = new Set([...includeNumbers, ...excludeNumbers]);
+      const pools = { lowOdd: [], lowEven: [], highOdd: [], highEven: [] };
+      for (let number = 1; number <= 45; number++) {
+        if (!blocked.has(number)) pools[getNumberBucket(number)].push(number);
+      }
+      return pools;
+    }
+
+    function getCompletionPlans(includeNumbers, excludeNumbers) {
+      const includeBuckets = countBuckets(includeNumbers);
+      const pools = makeCategoryPools(includeNumbers, excludeNumbers);
+      const needed = 6 - includeNumbers.length;
+      const plans = [];
+
+      for (let lowOdd = 0; lowOdd <= Math.min(needed, pools.lowOdd.length); lowOdd++) {
+        for (let lowEven = 0; lowEven <= Math.min(needed - lowOdd, pools.lowEven.length); lowEven++) {
+          for (let highOdd = 0; highOdd <= Math.min(needed - lowOdd - lowEven, pools.highOdd.length); highOdd++) {
+            const highEven = needed - lowOdd - lowEven - highOdd;
+            if (highEven < 0 || highEven > pools.highEven.length) continue;
+
+            const finalOdd = includeBuckets.lowOdd + includeBuckets.highOdd + lowOdd + highOdd;
+            const finalLow = includeBuckets.lowOdd + includeBuckets.lowEven + lowOdd + lowEven;
+            if (evenBalance.checked && finalOdd !== 3) continue;
+            if (highBalance.checked && finalLow !== 3) continue;
+
+            plans.push({ lowOdd, lowEven, highOdd, highEven });
+          }
+        }
+      }
+
+      return { plans, pools };
+    }
+
+    function shuffle(numbers) {
+      const copy = [...numbers];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function makeCandidate(includeNumbers, excludeNumbers) {
+      const chosen = new Set(includeNumbers);
+      const blocked = new Set([...excludeNumbers, ...includeNumbers]);
+      const pool = shuffle(Array.from({ length: 45 }, (_, index) => index + 1).filter((number) => !blocked.has(number)));
+      while (chosen.size < 6 && pool.length) {
+        chosen.add(pool.pop());
+      }
+      return [...chosen].sort((a, b) => a - b);
+    }
+
+    function generateSet(includeNumbers, excludeNumbers) {
+      if (!evenBalance.checked && !highBalance.checked) {
+        return makeCandidate(includeNumbers, excludeNumbers);
+      }
+
+      const { plans, pools } = getCompletionPlans(includeNumbers, excludeNumbers);
+      const plan = plans[Math.floor(Math.random() * plans.length)];
+      if (!plan) return makeCandidate(includeNumbers, excludeNumbers);
+
+      const selected = [...includeNumbers];
+      Object.keys(plan).forEach((bucket) => {
+        selected.push(...shuffle(pools[bucket]).slice(0, plan[bucket]));
+      });
+
+      return selected.sort((a, b) => a - b);
+    }
+
+    function generateSets() {
+      const includeNumbers = parseNumbers(includeInput.value);
+      const excludeNumbers = parseNumbers(excludeInput.value);
+      const message = validateRules(includeNumbers, excludeNumbers);
+      if (message) {
+        showToast(message);
+        return;
+      }
+
+      latestSets = Array.from({ length: setCount }, () => generateSet(includeNumbers, excludeNumbers));
+      renderResults(latestSets);
+      addHistory(latestSets);
+      updateStats(latestSets);
+    }
+
+    function renderResults(sets) {
+      emptyResult.style.display = "none";
+      resultList.innerHTML = sets.map((set, setIndex) => `
+        <div class="set-row">
+          <span class="set-index">${setIndex + 1}회</span>
+          <div class="balls">
+            ${set.map((number, index) => makeBall(number, index * 55)).join("")}
+          </div>
+        </div>
+      `).join("");
+
+      requestAnimationFrame(() => {
+        resultList.querySelectorAll(".ball").forEach((ball) => ball.classList.add("show"));
+      });
+    }
+
+    function updateStats(sets) {
+      if (!sets.length) {
+        $("#sumAvg").textContent = "-";
+        $("#oddEven").textContent = "-";
+        $("#lowHigh").textContent = "-";
+        $("#historyCount").textContent = history.length;
+        return;
+      }
+
+      const sums = sets.map((set) => set.reduce((total, number) => total + number, 0));
+      const avg = Math.round(sums.reduce((total, number) => total + number, 0) / sums.length);
+      const firstSet = sets[0];
+      const odd = countOdd(firstSet);
+      const low = countLow(firstSet);
+
+      $("#sumAvg").textContent = avg;
+      $("#oddEven").textContent = `${odd}:${6 - odd}`;
+      $("#lowHigh").textContent = `${low}:${6 - low}`;
+      $("#historyCount").textContent = history.length;
+    }
+
+    function addHistory(sets) {
+      const now = new Date();
+      const time = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      history.unshift({
+        time,
+        date: now.toLocaleDateString("ko-KR"),
+        sets
+      });
+      history = history.slice(0, MAX_HISTORY);
+      saveHistory();
+      renderHistory();
+    }
+
+    function renderHistory() {
+      $("#historyCount").textContent = history.length;
+      if (!history.length) {
+        historyList.innerHTML = `<p class="history-empty">아직 추천 기록이 없습니다.</p>`;
+        return;
+      }
+
+      historyList.innerHTML = history.map((item) => `
+        <div class="history-item">
+          <span class="history-time">${item.time}</span>
+          <span>${item.sets.map((set) => set.join(", ")).join(" · ")}</span>
+        </div>
+      `).join("");
+    }
+
+    function loadHistory() {
+      try {
+        return JSON.parse(readSavedValue(STORAGE_KEY, "[]"));
+      } catch {
+        return [];
+      }
+    }
+
+    function saveHistory() {
+      writeSavedValue(STORAGE_KEY, JSON.stringify(history));
+    }
+
+    async function copyHistory() {
+      if (!history.length) {
+        showToast("복사할 추천 기록이 없어요.");
+        return;
+      }
+      const text = history.map((item) => `${item.date} ${item.time} | ${item.sets.map((set) => set.join(", ")).join(" / ")}`).join("\n");
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast("최근 추천 기록을 복사했어요.");
+      } catch {
+        showToast("브라우저 권한 때문에 복사하지 못했어요.");
+      }
+    }
+
+    function downloadCsv() {
+      if (!history.length) {
+        showToast("내보낼 추천 기록이 없어요.");
+        return;
+      }
+      const rows = [["date", "time", "set", "numbers"]];
+      history.forEach((item) => {
+        item.sets.forEach((set, index) => {
+          rows.push([item.date, item.time, `${index + 1}`, set.join(" ")]);
+        });
+      });
+      const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
+      const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "lotto-history.csv";
+      link.click();
+      URL.revokeObjectURL(link.href);
+      showToast("CSV 파일을 만들었어요.");
+    }
+
+    function clearHistory() {
+      if (!history.length) {
+        showToast("삭제할 추천 기록이 없어요.");
+        return;
+      }
+      history = [];
+      saveHistory();
+      renderHistory();
+      updateStats(latestSets);
+      showToast("최근 추천 기록을 삭제했어요.");
+    }
+
+    function setTheme(nextTheme) {
+      const isLight = nextTheme === "light";
+      document.body.classList.toggle("light", isLight);
+      themeToggle.textContent = isLight ? "🌙 다크 모드" : "☀ 화이트 모드";
+      writeSavedValue(THEME_KEY, nextTheme);
+    }
+
+    function readSavedValue(key, fallback) {
+      try {
+        return localStorage.getItem(key) || fallback;
+      } catch {
+        return fallback;
+      }
+    }
+
+    function writeSavedValue(key, value) {
+      try {
+        localStorage.setItem(key, value);
+      } catch {
+        return false;
+      }
+      return true;
+    }
+
+    function setTodayLuckyNumber() {
+      const todayKey = new Date().toLocaleDateString("ko-KR");
+      let seed = 0;
+      for (let i = 0; i < todayKey.length; i++) {
+        seed += todayKey.charCodeAt(i) * (i + 11);
+      }
+      const number = (seed % 45) + 1;
+      const luckyNumber = $("#luckyNumber");
+      luckyNumber.textContent = number;
+      luckyNumber.classList.add(getBallClass(number));
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+
+    function playButtonSound() {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContext) return;
+      if (!audioCtx) audioCtx = new AudioContext();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+
+      const now = audioCtx.currentTime;
+      const master = audioCtx.createGain();
+      master.gain.setValueAtTime(0.0001, now);
+      master.gain.exponentialRampToValueAtTime(0.14, now + 0.012);
+      master.gain.exponentialRampToValueAtTime(0.0001, now + 0.18);
+      master.connect(audioCtx.destination);
+
+      [880, 1320].forEach((freq, index) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = index === 0 ? "triangle" : "sine";
+        osc.frequency.setValueAtTime(freq, now + index * 0.018);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.18, now + 0.13);
+        gain.gain.setValueAtTime(index === 0 ? 0.65 : 0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+        osc.connect(gain);
+        gain.connect(master);
+        osc.start(now + index * 0.018);
+        osc.stop(now + 0.19);
+      });
+
+      setTimeout(() => master.disconnect(), 240);
+    }
+
+    document.addEventListener("click", (event) => {
+      if (event.target.closest("button")) playButtonSound();
+    });
+
+    $("#btnMinus").addEventListener("click", () => {
+      setCount = Math.max(MIN_SET_COUNT, setCount - 1);
+      countVal.textContent = setCount;
+    });
+
+    $("#btnPlus").addEventListener("click", () => {
+      setCount = Math.min(MAX_SET_COUNT, setCount + 1);
+      countVal.textContent = setCount;
+    });
+
+    $("#btnGen").addEventListener("click", generateSets);
+    $("#copyHistory").addEventListener("click", copyHistory);
+    $("#downloadCsv").addEventListener("click", downloadCsv);
+    $("#clearHistory").addEventListener("click", clearHistory);
+    themeToggle.addEventListener("click", () => setTheme(document.body.classList.contains("light") ? "dark" : "light"));
+
+    setTheme(readSavedValue(THEME_KEY, "dark"));
+    setTodayLuckyNumber();
+    renderHistory();
+    updateStats([]);
+  </script>
 </body>
 </html>
+
